@@ -1,0 +1,27 @@
+#!/bin/sh
+
+myname="${0##*/}"
+
+mydir=$(dirname "$(readlink -f -- "$0")")
+
+# usage: prettyp "$1" "$2" "$3"
+# result: [1] 2: 3
+prettyp() {
+    if [ -n "$3" ]; then
+        printf '[\033[1;32m%s\033[0m] \033[1;31m%s\033[0m: %s\n' "$1" "$2" "$3"
+    else
+        printf '[\033[1;32m%s\033[0m] %s\n' "$1" "$2"
+    fi
+}
+
+prettyp "$myname" "building" "gtk theme"
+"$mydir"/build-gradience.py --pwfox
+
+theme="$HOME/.var/app/com.github.GradienceTeam.Gradience/config/presets/user/pywal.json"
+resdir="$HOME/proyects/adw-gtk2-colorizer/adw-gtk2/"
+
+prettyp "$myname" "applying" "gtk2 theme"
+"$mydir"/colorize.py -f "$theme" -r "$resdir"
+
+prettyp "$myname" "applying" "gtk3 and gtk4 theme"
+flatpak run --command=gradience-cli com.github.GradienceTeam.Gradience apply -n pywal --gtk both

@@ -1,0 +1,242 @@
+#!/bin/sh
+
+myname="${0##*/}"
+
+title="Wallpaper Changed"
+themecngmsg="theme changed"
+rndwallpaper="Random Wallpaper chosen."
+lastusedthemefile="${XDG_CACHE_HOME:-$HOME/.cache}/wal/last_used_theme"
+invalid_usetheme=""
+colsmethod=darken
+config="${XDG_CONFIG_HOME:-$HOME/.config}/setbg/configrc"
+
+# Location of link to wallpaper link.
+bgloc="${XDG_DATA_HOME:-$HOME/.local/share/}/bg"
+
+# usage: prettyp "$1" "$2" "$3"
+# result: [1] 2: 3
+prettyp() {
+    if [ -n "$3" ]; then
+        printf '[\033[1;32m%s\033[0m] \033[1;31m%s\033[0m: %s\n' "$1" "$2" "$3"
+    else
+        printf '[\033[1;32m%s\033[0m] %s\n' "$1" "$2"
+    fi
+}
+
+# Bakcend to use
+[ -z "$random_backend" ] || BackEnd=$(shuf -n 1 -e colorz wal schemer2 haishoku colorthief)
+
+if [ -z "$BackEnd" ]; then
+    if [ -f "$lastusedthemefile" ]; then
+        # type: str
+        # contents of ~/.cache/wal/last_used_theme
+        # because of how this file is written we have to cat it
+        lastthemestr=$(cat "$lastusedthemefile")
+        case "$lastthemestr" in
+            *_fast_colorthief*)  BackEnd="fast_colorthief" ;;
+            *_colorthief_*)      BackEnd="colorthief" ;;
+            *_colorz_*)          BackEnd="colorz" ;;
+            *_haishoku_*)        BackEnd="haishoku" ;;
+            *_schemer2_*)        BackEnd="schemer2" ;;
+            *_wal_*)             BackEnd="wal" ;;
+        esac
+    else
+            BackEnd=wal
+    fi
+fi
+
+# input parsing
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -debug)
+            DBGOUT=1
+            shift
+            ;;
+        -rebuild|-r)
+            while [ -n "$2" ]; do
+                [ -n "$DBGOUT" ] && echo "${myname} arg 2: $2"
+                case "$2" in
+                    "cursor")
+                        rebuild_any=1
+                        rebuild_cursor=1
+                        ;;
+                    "greeter")
+                        rebuild_any=1
+                        rebuild_greeter=1
+                        ;;
+                    "telegram")
+                        rebuild_any=1
+                        rebuild_telegram=1
+                        ;;
+                    "chromium")
+                        rebuild_any=1
+                        rebuild_chromium=1
+                        ;;
+                    "icons")
+                        rebuild_any=1
+                        rebuild_icons=1
+                        ;;
+                    "gtk")
+                        rebuild_any=1
+                        rebuild_gtk=1
+                        ;;
+                    "qt")
+                        rebuild_any=1
+                        rebuild_qt=1
+                        ;;
+                    "steam")
+                        rebuild_any=1
+                        rebuild_steam=1
+                        ;;
+                    "all")
+                        rebuild_all=1
+                        ;;
+                    *) # do nothing
+                        :
+                        ;;
+                esac
+                shift
+            done
+            shift
+            ;;
+        -dry|-dryrun|-n)
+            DRYRUN=1
+            shift
+            ;;
+        -t|-theme|--theme)
+            shift
+            usetheme="$1"
+            shift
+            if [ -f "$usetheme" ]; then
+                case "$usetheme" in
+                    *.json)
+                        prettyp "$myname" "valid extension"
+                        if grep -q '"wallpaper": ".*"' "$usetheme"; then
+                            prettyp "${myname}" "valid theme file"
+                            rebuild_all=1
+                        else
+                            prettyp "${myname}" "invalid theme file"
+                            invalid_usetheme=1
+                        fi
+                    ;;
+                    *)
+                        prettyp "${myname}" "invalid theme file"
+                        invalid_usetheme=1
+                    ;;
+                esac
+            else
+                prettyp "${myname}" "invalid argument" "${usetheme}"
+                invalid_usetheme=1
+            fi
+            if [ "$invalid_usetheme" = 1 ]; then
+                exit 1
+            fi
+            ;;
+        -norebuild|-rn)
+            rebuild_no=1
+            shift
+            ;;
+        *)
+            [ -n "$DBGOUT" ] && echo "${myname} arg 1: $1"
+            if [ -f "$1" ]; then
+                [ -n "$DBGOUT" ] && echo "${myname} arg 1 is a file"
+                input="${1}"
+            fi
+            if [ -d "$1" ]; then
+                [ -n "$DBGOUT" ] && echo "${myname} arg 1 is a dir"
+                input="${1}"
+            fi
+            if [ -z "$input" ]; then
+                prettyp "${myname}" "error, invalid argument" "${1}"
+            fi
+            shift
+            ;;
+    esac
+done
+# [ -n "$DBGOUT" ] && echo "$#"
+
+if [ -n "$rebuild_all" ]; then
+    rebuild_any=1
+    rebuild_cursor=1
+    rebuild_greeter=1
+    rebuild_telegram=1
+    rebuild_chromium=1
+    rebuild_icons=1
+    rebuild_gtk=1
+    rebuild_qt=1
+    rebuild_steam=1
+fi
+if [ -n "$input" ]; then
+    rebuild_any=1
+    rebuild_cursor=1
+    rebuild_greeter=1
+    rebuild_telegram=1
+    rebuild_chromium=1
+    rebuild_icons=1
+    rebuild_gtk=1
+    rebuild_qt=1
+    rebuild_steam=1
+fi
+if [ -n "$rebuild_no" ]; then
+    rebuild_any=""
+    rebuild_cursor=""
+    rebuild_greeter=""
+    rebuild_telegram=""
+    rebuild_chromium=""
+    rebuild_icons=""
+    rebuild_gtk=""
+    rebuild_qt=""
+    rebuild_steam=""
+fi
+
+[ -n "$DBGOUT" ] && echo "${myname} input: ${input}"
+[ -n "$DBGOUT" ] && echo "${myname} rebuild any: ${rebuild_any}"
+[ -n "$DBGOUT" ] && echo "${myname} rebuild cursor: ${rebuild_cursor}"
+[ -n "$DBGOUT" ] && echo "${myname} rebuild greeter: ${rebuild_greeter}"
+[ -n "$DBGOUT" ] && echo "${myname} rebuild telegram: ${rebuild_telegram}"
+[ -n "$DBGOUT" ] && echo "${myname} rebuild chromium: ${rebuild_chromium}"
+[ -n "$DBGOUT" ] && echo "${myname} rebuild icons: ${rebuild_icons}"
+[ -n "$DBGOUT" ] && echo "${myname} rebuild gtk: ${rebuild_gtk}"
+[ -n "$DBGOUT" ] && echo "${myname} rebuild qt: ${rebuild_qt}"
+[ -n "$DBGOUT" ] && echo "${myname} rebuild steam: ${rebuild_steam}"
+
+if [ -n "$DRYRUN" ]; then
+    input=""
+    rebuild_any=""
+    rebuild_cursor=""
+    rebuild_greeter=""
+    rebuild_telegram=""
+    rebuild_chromium=""
+    rebuild_icons=""
+    rebuild_gtk=""
+    rebuild_qt=""
+    rebuild_steam=""
+fi
+
+# load config
+. "$config"
+
+if [ -z "$usetheme" ]; then
+    [ -f "$input" ] && ln -sf "$(readlink -f "$input")" "$bgloc" && notification="Changing theme..."
+    [ -d "$input" ] && ln -sf "$(find "$(readlink -f "$input")" -iregex '.*.\(jpg\|jpeg\|png\|gif\)' -type f | shuf -n 1)" "$bgloc" && notification="$rndwallpaper"
+    prettyp "${myname}"  "using backend" "$BackEnd"
+    [ -z "$DRYRUN" ] && wal --backend "$BackEnd" --cols16 "$colsmethod" -i "$(readlink -f "$bgloc")" -o "${XDG_CONFIG_HOME:-$HOME/.config}"/wal/postrun
+else
+    [ -z "$DRYRUN" ] && wal --theme "${usetheme}" -o "${XDG_CONFIG_HOME:-$HOME/.config}"/wal/postrun
+fi
+
+[ -z "$input" ] || { notify-send -i "$bgloc" "$title" "$notification"; } &
+[ -z "$rebuild_icons" ] || { prettyp "${myname}" "building" "icon theme"; ~/Downloads/gitapps/themix-gui/plugins/icons_papirus/change_color.sh -o pywal ~/.cache/wal/materia-colors ; } &
+[ -z "$rebuild_cursor" ] || { prettyp "${myname}" "building" "cursor theme"; ~/Downloads/gitapps/breeze-hacked-cursor-theme/change_color.sh -o breeze-pywal ~/.cache/wal/materia-colors 2>/dev/null ; }
+[ -z "$rebuild_cursor" ] || { awesome-client 'awesome.restart()' ; }
+[ -z "$rebuild_greeter" ] || { prettyp "${myname}" "building" "greeter theme"; slick-pywal; } &
+[ -z "$rebuild_telegram" ] || { prettyp "${myname}" "building" "telegram theme"; ~/.config/setbg/scripts/wal-telegram/wal-telegram --wal ; } &
+[ -z "$rebuild_chromium" ] || { prettyp "${myname}" "building" "chromium theme"; ~/.config/setbg/scripts/ChromiumPywal/generate-theme.sh ; } &
+[ -z "$rebuild_gtk" ] || { prettyp "${myname}" "building" "gtk theme"; ~/.config/setbg/scripts/Gtk/build-gtk ; }
+[ -z "$rebuild_qt" ] || { prettyp "${myname}" "building" "qt colorscheme"; ~/.config/wal/qtstyle.sh ; }
+[ -z "$rebuild_steam" ] || { prettyp "${myname}" "building" "steam theme"; ~/.config/setbg/scripts/steam/build-steam ; }
+# [ -z "$1" ] || wal-discord -b wal &
+wait
+[ -z "$rebuild_any" ] || { prettyp "${myname}" "updating" "xsettings"; ~/.config/setbg/scripts/XSettingsUpdate/xsettings-update ; }
+[ -z "$rebuild_any" ] || { sleep 1 && notify-send -i "$bgloc" "$title" "$themecngmsg"; }
+prettyp "${myname}" "done"

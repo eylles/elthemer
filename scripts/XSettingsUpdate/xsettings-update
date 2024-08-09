@@ -1,0 +1,62 @@
+#!/bin/sh
+
+myname="${0##*/}"
+
+# usage: prettyp "$1" "$2" "$3"
+# result: [1] 2: 3
+prettyp() {
+    if [ -n "$3" ]; then
+        printf '[\033[1;32m%s\033[0m] \033[1;31m%s\033[0m: %s\n' "$1" "$2" "$3"
+    else
+        printf '[\033[1;32m%s\033[0m] %s\n' "$1" "$2"
+    fi
+}
+
+# c_hs_file=0
+ HomeXsettingsFile="${HOME}/.xsettingsd"
+ DarkXsettingsFile="${HOME}/.config/xsettingsd/xsettingsd-dark.conf"
+LightXsettingsFile="${HOME}/.config/xsettingsd/xsettingsd-light.conf"
+ ConfXsettingsFile="${HOME}/.config/xsettingsd/xsettingsd.conf"
+
+# input parsing
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        debug)   DBGOUT=1  ;;
+        *) echo "${0}: error, invalid argument: ${1}" ;;
+    esac
+    shift
+done
+[ "$DBGOUT" = 1 ] && echo "${0}"
+
+if [ -f "$HomeXsettingsFile" ]; then
+  [ "$DBGOUT" = 1 ] && echo "${myname}: $HomeXsettingsFile exists"
+  if [ -L "$HomeXsettingsFile" ]; then
+    [ "$DBGOUT" = 1 ] && echo "${myname}: $HomeXsettingsFile is a link, nothing to do"
+  else
+    echo "${myname}: $HomeXsettingsFile is not a link, backing up"
+    cp "${HomeXsettingsFile}" "${HomeXsettingsFile}.bak"
+    echo "${myname}: back up at ${HomeXsettingsFile}.bak"
+  fi
+else
+    [ "$DBGOUT" = 1 ] && echo "${myname}: $HomeXsettingsFile doesnt exist"
+    # c_hs_file=1
+fi
+
+# ln -s "$ConfXsettingsFile" "$HomeXsettingsFile"
+
+prettyp "$myname" "reloading portals"
+
+# restart portals
+for portal in $(pgrep -a xdg | grep portal | awk '{ print $1 }'); do
+  kill "$portal"
+done
+
+prettyp "$myname" "reloading xsettings"
+ln -sf "$LightXsettingsFile" "$ConfXsettingsFile"
+shedc hup xsettings-daemon > /dev/null
+shedc hup xsettings-daemon > /dev/null
+ln -sf "$DarkXsettingsFile" "$ConfXsettingsFile"
+shedc hup xsettings-daemon > /dev/null
+shedc hup xsettings-daemon > /dev/null
+prettyp "$myname" "xsettings updated"
+

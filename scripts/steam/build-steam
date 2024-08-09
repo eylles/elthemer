@@ -1,0 +1,26 @@
+#!/bin/sh
+
+theme="$HOME/.var/app/com.github.GradienceTeam.Gradience/config/presets/user/pywal.json"
+
+myname="${0##*/}"
+
+mydir=$(dirname "$(readlink -f -- "$0")")
+
+
+# usage: prettyp "$1" "$2" "$3"
+# result: [1] 2: 3
+prettyp() {
+    if [ -n "$3" ]; then
+        printf '[\033[1;32m%s\033[0m] \033[1;31m%s\033[0m: %s\n' "$1" "$2" "$3"
+    else
+        printf '[\033[1;32m%s\033[0m] %s\n' "$1" "$2"
+    fi
+}
+
+prettyp "$myname" "building" "steam theme"
+
+"$mydir"/build-theme.py -f "$theme"
+
+prettyp "$myname" "applying" "steam theme"
+
+flatpak run io.github.Foldex.AdwSteamGtk -i
