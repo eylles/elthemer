@@ -1,0 +1,239 @@
+#!/bin/bash
+
+wallpaper="/home/ed/Pictures/wallpapers/__deutschland_drawn_by_eva_hq8nn1ef__1d76004e7853b8a82cedf3e8def525fa.png"
+
+# Special
+background='#1e0b0d'
+foreground='#c6c2c2'
+cursor='#c6c2c2'
+
+# Colors
+color0='#1e0b0d'
+color1='#4E3747'
+color2='#484452'
+color3='#5A4F5F'
+color4='#992D2C'
+color5='#9F6B68'
+color6='#E04742'
+color7='#8e8586'
+color8='#564849'
+color9='#b52d8d'
+color10='#562fbf'
+color11='#9a35cc'
+color12='#cf4342'
+color13='#d9726a'
+color14='#dd7d7a'
+color15='#c6c2c2'
+
+
+source "${HOME}/.cache/wal/colors.sh"
+
+foxyfy() {
+    python3 - "$@" <<'___HEREDOC'
+from sys import argv
+
+
+def hex_to_rgb(color):
+    """Convert a hex color to rgb."""
+    return tuple(bytes.fromhex(color.strip("#")))
+
+
+def rgb_to_hex(color):
+    """Convert an rgb color to hex."""
+    return "#%02x%02x%02x" % (*color,)
+
+
+def work(color, f):
+    pwf = float(f)
+    c = hex_to_rgb(color)
+    b = []
+    b.append(min((max(0, int(c[0] + (c[0] * pwf)))), 255))
+    b.append(min((max(0, int(c[1] + (c[1] * pwf)))), 255))
+    b.append(min((max(0, int(c[2] + (c[2] * pwf)))), 255))
+    return rgb_to_hex(b)
+
+
+print(work(argv[1],argv[2]))
+___HEREDOC
+}
+
+# return type: comma delimited list string
+# usage: hexToRgb "#abc123"
+# description:
+#   Converts hex colors into rgb list joined with comma
+#   #ffffff -> 255,255,255
+hexToRgb() {
+    # Remove '#' character from hex color #fff -> fff
+    plain=${1#*#}
+    # printf '%s\n' "$plain"
+    seg1="${plain%%[A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9]}"
+    # printf '%s\n' "$seg1"
+    seg2="${plain}"
+    seg2="${seg2%%[A-Fa-f0-9][A-Fa-f0-9]}"
+    seg2="${seg2##[A-Fa-f0-9][A-Fa-f0-9]}"
+    # printf '%s\n' "$seg2"
+    seg3="${plain##[A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9]}"
+    # printf '%s\n' "$seg3"
+    printf '%d,%d,%d\n' 0x"${seg1}" 0x"${seg2}" 0x"${seg3}"
+  }
+
+# return type: string
+# usage: split_list "string" "pattern"
+# description:
+#   splits list string on pattern returns
+#   a newline separated list.
+# taken from: https://github.com/dylanaraps/pure-sh-bible#split-a-string-on-a-delimiter
+split_list() {
+    # Disable globbing.
+    # This ensures that the word-splitting is safe.
+    set -f
+
+    # Store the current value of 'IFS' so we
+    # can restore it later.
+    old_ifs=$IFS
+
+    # Change the field separator to what we're
+    # splitting on.
+    IFS=$2
+
+    # Create an argument list splitting at each
+    # occurance of '$2'.
+    #
+    # This is safe to disable as it just warns against
+    # word-splitting which is the behavior we expect.
+    # shellcheck disable=2086
+    set -- $1
+
+    # Print each list value on its own line.
+    printf '%s\n' "$@"
+
+    # Restore the value of 'IFS'.
+    IFS=$old_ifs
+
+    # Re-enable globbing.
+    set +f
+}
+
+lighten () {
+    color=$1
+    amount=$2
+    rgbcol=$(hexToRgb "$color")
+    colout=""
+    i=0
+    for colbit in $(split_list "$rgbcol" ","); do
+        modbit=$(( colbit + ( 255 * amount / 100 ) ))
+        # printf '%s: %d\n' "$i" "$modbit"
+        # printf '%s: %02x\n' "$i" "$modbit"
+        colout="${colout}"$(printf '%02x' "$modbit")
+        i=$(( i + 1))
+    done
+    printf '#%s\n' "$colout"
+}
+
+darken () {
+    color=$1
+    amount=$2
+    rgbcol=$(hexToRgb "$color")
+    colout=""
+    i=0
+    for colbit in $(split_list "$rgbcol" ","); do
+        modbit=$(( colbit - ( 255 * amount / 100 ) ))
+        # printf '%s: %d\n'   "$i" "$modbit"
+        # printf '%s: %02x\n' "$i" "$modbit"
+        colout="${colout}"$(printf '%02x' "$modbit")
+        i=$(( i + 1))
+    done
+    printf '#%s\n' "$colout"
+}
+
+background_d=$(lighten "$background" 5)
+background_l=$(foxyfy "$background" "1.85")
+
+# mkdir -p  "${HOME}"/.config/dunst
+mkdir -p  "${HOME}"/.config/zathura
+# ln -sf    "${HOME}"/.cache/wal/dunstrc    "${HOME}"/.config/dunst/dunstrc
+ln -sf    "${HOME}"/.cache/wal/zathuracolsrc    "${HOME}"/.config/zathura/zathuracolsrc
+ln -sf    "${HOME}"/.cache/wal/vimiv-wal    "${HOME}"/.config/vimiv/styles/wal
+# ln -sf    "${HOME}"/.cache/wal/krita.colors    "${HOME}"/.local/share/krita/color-schemes/kritawal.colors
+ln -sf    "${HOME}"/.cache/wal/krita.colors    "${HOME}"/.var/app/org.kde.krita/data/krita/color-schemes/kritawal.colors
+# cp -f "${HOME}"/.cache/wal/pywal.json "${HOME}"/.var/app/com.github.GradienceTeam.Gradience/config/presets/user/pywal.json
+# cat "${HOME}"/.config/wal/Xresources "${HOME}"/.cache/wal/colors.Xresources > "${HOME}"/.config/Xresources
+# cp -f ~/.cache/wal/pywal-steam.css ~/.var/app/io.github.Foldex.AdwSteamGtk/config/AdwSteamGtk/custom.css
+
+cp "${HOME}"/.cache/wal/ferdium.css "${HOME}"/.var/app/org.ferdium.Ferdium/config/Ferdium/config/custom.css
+cp "${HOME}"/.cache/wal/darkreader.json "${HOME}"/.config/darkreader/config.json
+
+sed -i '/X colors/,$ d' "${HOME}"/.config/x11/xresources
+cat "${HOME}"/.cache/wal/colors.Xresources >> "${HOME}"/.config/x11/xresources
+
+# pre template
+# sed -n '/\[Control Panel\\\\Colors\]/q;p' .local/share/wineprefixes/default/user.reg
+
+# post template
+# sed -n '/\[Control Panel\\\\Desktop\]/,$p' .local/share/wineprefixes/default/user.reg
+
+sed -i "
+        /uiColor/s/\#[[:xdigit:]]\{6\}/$color12/ ;
+        /UiColo/s/\#[[:xdigit:]]\{6\}/$color15/ ;
+        /drawColor/s/\#[[:xdigit:]]\{6\}/$color10/
+        " ~/.config/flameshot/flameshot.ini
+
+sed -i '/background/s@#[[:xdigit:]]\{6\}@'"$color0"'@' ~/.config/mpv/mpv.conf
+sed -i '/buttonHoveredColor/s@#[[:xdigit:]]\{6\}@'"$color11"'@ ; /seekbarFgColor/s@#[[:xdigit:]]\{6\}@'"$color2"'@' ~/.config/mpv/script-opts/tethys.conf
+
+sed "
+      s/#282a36/${background}/g ;
+      s/#21222c/${background_d}/g ;
+      s/#44475a/${background_l}/g ;
+      s/#f8f8f2/${foreground}/g ;
+      s/#a4ffff/${color10}/g ;
+      s/#ffffa5/${color11}/g ;
+      s/#d6acff/${color12}/g ;
+    " "${HOME}/.config/wal/copyq.ini" > "${HOME}/.config/copyq/themes/wal.ini"
+
+# xrdb "${HOME}"/.config/x11/xresources
+# cat "${HOME}"/.config/wal/conkyrc "${HOME}"/.cache/wal/conkycolors "${HOME}"/.config/wal/conky.conf > "${HOME}"/.config/conky/conkyrc
+# sed "s/000000/${color0###}/g ; s/B33F41/${color5###}/g" "${HOME}"/.config/wal/rings-v1.2.1.lua > "${HOME}"/.config/conky/rings-v1.2.1.lua
+# [ -f "${HOME}"/.local/share/plank/themes/wal/dock.theme ] ||  mkdir -p "${HOME}"/.local/share/plank/themes/wal/ & touch "${HOME}"/.local/share/plank/themes/wal/dock.theme
+# sed '8,15 s/,/;;/g' "${HOME}"/.cache/wal/dock.theme > "${HOME}"/.local/share/plank/themes/wal/dock.theme
+ # sed "s/#101112/${color0}/g ; 
+ #      s/#C48D62/${color1}/g ; 
+ #      s/#99AE63/${color2}/g ; 
+ #      s/#D8C27A/${color3}/g ; 
+ #      s/#7495B6/${color4}/g ; 
+ #      s/#B59CD8/${color5}/g ; 
+ #      s/#8DC9C3/${color6}/g ; 
+ #      s/#BCC5D1/${color7}/g ; 
+ #      s/#586270/${color8}/g ; 
+ #      s/#B27B78/${color9}/g ; 
+ #      s/#282C33/${color10}/g ; 
+ #      s/#383E47/${color11}/g ; 
+ #      s/#798494/${color12}/g ; 
+ #      s/#D8D8D8/${color13}/g ; 
+ #      s/#CC99B3/${color14}/g ; 
+ #      s/#FDFEFF/${color15}/g" \
+ #      "${HOME}"/.config/wal/crayon-wal.vim > "${HOME}"/.config/nvim/plugged/crayon/colors/crayon.vim
+ cp -f "${HOME}"/.cache/wal/crayon-colors.vim "${HOME}"/.config/nvim/plugged/crayon/colors/crayon.vim
+ cp -f "${HOME}"/.cache/wal/crayon-airline.vim "${HOME}"/.config/nvim/plugged/crayon/autoload/airline/themes/crayon.vim
+
+# sed "s/101112/${color0###}/g ; s/C48D62/${color1###}/g ; s/99AE63/${color2###}/g ; s/D8C27A/${color3###}/g ; s/7495B6/${color4###}/g ; s/B59CD8/${color5###}/g ; s/8DC9C3/${color6###}/g ; s/BCC5D1/${color7###}/g ; s/586270/${color8###}/g ; s/B27B78/${color9###}/g ; s/282C33/${color10###}/g ; s/383E47/${color11###}/g ; s/798494/${color12###}/g ; s/D8D8D8/${color13###}/g ; s/C99B3/${color14###}/g ; s/FDFEFF/${color15###}/g" "${HOME}"/.config/wal/crayon-airline-wal.vim > "${HOME}"/.config/nvim/plugged/crayon/autoload/airline/themes/crayon.vim
+
+fix_sequences() {
+        e=$'\e'
+        sequences=$(cat)
+        foreground_color="$(echo -e "${sequences}\c" | grep --color=never -Eo "${e}]10[^${e}\\\\]*?${e}\\\\" | grep --color=never -Eo "#[0-9A-Fa-f]{6}")"
+        background_color="$(echo -e "${sequences}\c" | grep --color=never -Eo "${e}]11[^${e}\\\\]*?${e}\\\\" | grep --color=never -Eo "#[0-9A-Fa-f]{6}")"
+        cursor_color="$(echo -e "${sequences}\c" | grep --color=never -Eo "${e}]12[^${e}\\\\]*?${e}\\\\" | grep --color=never -Eo "#[0-9A-Fa-f]{6}")"
+
+        for term in /dev/pts/{0..9}*
+        do
+                echo -e "\e]4;256;${cursor_color}\a\c" > "${term}" 2>/dev/null
+                echo -e "\e]4;258;${background_color}\a\c" > "${term}" 2>/dev/null
+                echo -e "\e]4;259;${foreground_color}\a\c" > "${term}" 2>/dev/null
+        done
+}
+
+# fix_sequences <"${HOME}/.cache/wal/sequences"
+
+chmod +x "${HOME}"/.cache/wal/ttycol.sh
+# pkill dunst; dunst &
