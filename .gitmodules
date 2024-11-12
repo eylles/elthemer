@@ -1,0 +1,4 @@
+[submodule "ChromiumPywal"]
+	path = scripts/ChromiumPywal
+	url = https://github.com/eylles/ChromiumPywal
+
