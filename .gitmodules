@@ -2,3 +2,6 @@
 	path = scripts/ChromiumPywal
 	url = https://github.com/eylles/ChromiumPywal
 
+[submodule "wal-telegram"]
+	path = scripts/wal-telegram
+    url = https://github.com/eylles/wal-telegram
