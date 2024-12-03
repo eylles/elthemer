@@ -33,12 +33,14 @@ if [ -z "$BackEnd" ]; then
         # because of how this file is written we have to cat it
         lastthemestr=$(cat "$lastusedthemefile")
         case "$lastthemestr" in
-            *_fast_colorthief*)  BackEnd="fast_colorthief" ;;
-            *_colorthief_*)      BackEnd="colorthief" ;;
-            *_colorz_*)          BackEnd="colorz" ;;
-            *_haishoku_*)        BackEnd="haishoku" ;;
-            *_schemer2_*)        BackEnd="schemer2" ;;
-            *_wal_*)             BackEnd="wal" ;;
+            *fast_colorthief_*)   BackEnd="fast_colorthief" ;;
+            *modern_colorthief_*) BackEnd="modern_colorthief" ;;
+            *_colorthief_*)       BackEnd="colorthief" ;;
+            *_okthief_*)          BackEnd="okthief" ;;
+            *_colorz_*)           BackEnd="colorz" ;;
+            *_haishoku_*)         BackEnd="haishoku" ;;
+            *_schemer2_*)         BackEnd="schemer2" ;;
+            *_wal_*)              BackEnd="wal" ;;
         esac
     else
             BackEnd=wal
